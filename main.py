@@ -1,0 +1,98 @@
+import asyncio
+import random
+import logging
+import datetime
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import Command
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+# Оновлений токен
+BOT_TOKEN = "8934888528:AAGfbF2iyjp6htX0xIylwrC-FCfURMRriWY"
+CHAT_ID = -1004236656970
+
+logging.basicConfig(level=logging.INFO)
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+# Списки контенту
+WISDOMS = [
+    "Без труда нема плода.", "Хто рано встає, тому Бог дає.", "Зробив діло — гуляй сміло.",
+    "Праця чоловіка годує, а лінь марнує.", "Хто не працює, той не їсть.", "Де руки й охота, там скора робота.",
+    "Людина пізнається в праці.", "Не кажи «гоп», поки не перескочиш.", "Очі страшаться, а руки роблять.",
+    "Добре роби — добре й буде.", "Хто сіє вчасно, той буде рясно.", "Не відкладай на завтра те, що можна зробити сьогодні.",
+    "Коваль кує, поки залізо гаряче.", "Праця — основа щастя.", "Хто рано встав, той збагатів.",
+    "Ледачому й піч холодна.", "Лінь перш за тебе народилась.", "Де лінь, там і злидні.",
+    "Ледачий двічі робить.", "Хто спить до обіду, той не знає привіду.", "Лежачого хліба не боїться.",
+    "Без охоти нема роботи.", "Ледар і голодний, і холодний.", "Дурний лежить, а розумний біжить.",
+    "Лінивому завжди свято.", "Скажи мені, хто твій друг, і я скажу, хто ти.", "Друзі пізнаються в біді.",
+    "Один за всіх і всі за одного.", "Не май сто рублів, а май сто друзів.", "Друг — то другий я.",
+    "Справжній друг — то великий скарб.", "Без друга на світі туго.", "Дружнє слово — що весняний дощ.",
+    "Шануй батька і матір — буде тобі добро на землі.", "Які батьки, такі й діти.", "Яблуко від яблуні недалеко падає.",
+    "Без сім’ї людина — що дерево без коріння.", "Батьківська хата — найтепліше місце.", "Вчися змолоду — пригодиться на старість.",
+    "Розум — найбільший скарб.", "Книга — джерело мудрості.", "Учись, поки є час.", "Мудрість приходить з роками."
+]
+
+JOKES = [
+    "Один хлопчик не вмів вимовляти слово шість. Прийшов в магазин і каже: — Дайте мені сім пачок масла, одну не треба.",
+    "Коханий, що ти читаєш? – Свідоцтво про шлюб.. – Навіщо??? - Термін придатності шукаю…",
+    "Боїшся стрибати з парашутом? – Так. – Стрибай без нього.",
+    "Уночі поліція зупиняє п’яненьку дамочку: – Куди поспішаємо? – На лекцію.",
+    "Трамвай поїхав — шафа склалася. Сусід: — Давай знову зберемо, я залізу всередину, подивлюся, що там не так…",
+    "Коляска на мотоциклі була погано закріплена, тому Олег та Ольга розійшлися красиво.",
+    "Лікарю, ви пам'ятаєте, що порекомендували мені від депресії? – Так, завести коханця!",
+    "Не розумію… Чому штани, в яких найкраще лежати на дивані, називаються спортивними?",
+    "Операційна. Медсестра кричить: – У нього з’явився пульс, він повертається! Лікар: – Повертатися — погана прикмета.",
+    "Докторе, я зламав ногу в двох місцях! — Ви запам’ятали ці місця? — Так. — Тоді більше туди не ходіть.",
+    "Їде блондинка на джипі, даішник зупиняє: – Чому спереду і ззаду різні номери? – Попереду – мобільний, а ззаду – домашній.",
+    "На м’ясокомбінаті одна корова запитує іншу: – Ти тут вперше? – Ні, блін, удруге!",
+    "Гугл – це напевно жінка: ніколи не дасть тобі закінчити фразу і запропонує свій варіант продовження…",
+    "Чоловік з дружиною вночі у ліжку: – Коханий, візьми мене. – Спи, я нікуди не їду."
+]
+
+def get_day_info():
+    days = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя"]
+    return days[datetime.datetime.now().weekday()]
+
+def get_menu_kb():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🧠 Мудрість дня", callback_data="get_wisdom")],
+        [InlineKeyboardButton(text="😂 Свіжий анекдот", callback_data="get_joke")]
+    ])
+
+@dp.message(Command("start"))
+async def cmd_start(message: types.Message):
+    welcome_text = f"Вітаю! Я ПоСміХунЧиК. Сьогодні {get_day_info()}. Обирай, що хочеш:"
+    await message.answer(welcome_text, reply_markup=get_menu_kb())
+
+@dp.callback_query(F.data == "get_wisdom")
+async def send_wisdom(callback: types.CallbackQuery):
+    await callback.message.answer(f"🧠 {random.choice(WISDOMS)}")
+    await callback.answer()
+
+@dp.callback_query(F.data == "get_joke")
+async def send_joke(callback: types.CallbackQuery):
+    await callback.message.answer(f"😂 {random.choice(JOKES)}")
+    await callback.answer()
+
+async def job_morning():
+    photo = f"https://picsum.photos/800/600?random={random.randint(1, 10000)}"
+    text = f"☀️ Доброго ранку! Сьогодні {get_day_info()}.\n{random.choice(WISDOMS)}"
+    await bot.send_photo(chat_id=CHAT_ID, photo=photo, caption=text)
+
+async def job_joke():
+    await bot.send_message(chat_id=CHAT_ID, text=f"😂 Анекдот дня: {random.choice(JOKES)}")
+
+async def job_night():
+    await bot.send_message(chat_id=CHAT_ID, text="🌙 На добраніч! Солодких снів! 💤")
+
+async def main():
+    scheduler = AsyncIOScheduler(timezone="Europe/Kyiv")
+    scheduler.add_job(job_morning, "cron", hour=7, minute=0)
+    scheduler.add_job(job_joke, "cron", hour=12, minute=30)
+    scheduler.add_job(job_night, "cron", hour=23, minute=0)
+    scheduler.start()
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
