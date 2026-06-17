@@ -1,4 +1,0 @@
-aiogram==3.15.0
-apscheduler==3.10.4
-requests
-beautifulsoup4
